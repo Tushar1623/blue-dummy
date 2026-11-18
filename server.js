@@ -515,7 +515,7 @@ app.get('/', (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 Godrej Blue Web Server is running live on: http://localhost:${PORT}`);
   console.log(`🔐 Admin Panel: http://localhost:${PORT}/admin`);
   console.log(`📊 Leads API Endpoint: http://localhost:${PORT}/api/enquiry`);
