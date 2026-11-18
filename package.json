@@ -1,0 +1,19 @@
+{
+  "name": "godrej-blue",
+  "version": "1.0.0",
+  "description": "A faithful, fully responsive replica of the [Godrej Blue Kolkata Landing Page](https://www.godrejproperties.com/landing-page/kolkata/residential/godrej-blue/).",
+  "main": "formSubmit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "mongodb": "^7.9.0"
+  }
+}
