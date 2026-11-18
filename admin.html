@@ -534,6 +534,31 @@
     }
 
     /* Table Elements */
+    .lead-number-badge {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      display: inline-block;
+      text-align: center;
+      min-width: 34px;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    /* Red marked when leads have the same IP address */
+    .lead-number-badge.duplicate-ip-number {
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+      border: 1.5px solid #ef4444 !important;
+      font-weight: 800 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+      animation: pulseRed 2s infinite ease-in-out;
+    }
+
     .lead-id-tag {
       font-family: var(--mono);
       font-size: 0.72rem;
@@ -542,7 +567,59 @@
       padding: 0.15rem 0.4rem;
       border-radius: 4px;
       display: inline-block;
-      margin-top: 0.2rem;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .lead-id-tag.duplicate-ip-id {
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+      border: 1px solid #f87171 !important;
+      font-weight: 700 !important;
+    }
+
+    .duplicate-ip-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.12rem 0.48rem;
+      border-radius: 9999px;
+      letter-spacing: 0.2px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: inline-block;
+    }
+
+    @keyframes pulseRed {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .duplicate-ip-alert-banner {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1.15rem;
+      color: #991b1b;
+      font-size: 0.84rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .duplicate-ip-alert-banner strong {
+      color: #7f1d1d;
     }
 
     .lead-name {
@@ -1111,6 +1188,7 @@
             <button class="filter-pill" data-filter="brochure" onclick="setFilter('brochure', this)">Brochures</button>
             <button class="filter-pill" data-filter="enquiry" onclick="setFilter('enquiry', this)">Enquiries</button>
             <button class="filter-pill" data-filter="today" onclick="setFilter('today', this)">Today</button>
+            <button class="filter-pill" data-filter="same_ip" onclick="setFilter('same_ip', this)" style="color: #dc2626;">⚠️ Same IP (<span id="sameIpCountBadge">0</span>)</button>
           </div>
 
           <select class="status-select" id="statusFilter" onchange="handleStatusFilter()">
@@ -1141,6 +1219,7 @@
           <table>
             <thead>
               <tr>
+                <th style="width: 55px; text-align: center;">#</th>
                 <th>Lead &amp; Date</th>
                 <th>Contact Details</th>
                 <th>Type</th>
@@ -1380,7 +1459,38 @@
       }
       empty.style.display = 'none';
 
-      leads.forEach(lead => {
+      // 1. Calculate duplicate IP addresses across all captured leads
+      const ipCounts = {};
+      leadsData.forEach(l => {
+        const ip = (l.ip || '').trim();
+        if (ip) {
+          ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+        }
+      });
+
+      // Update duplicate IP count badge in filter bar
+      const sameIpTotal = leadsData.filter(l => {
+        const ip = (l.ip || '').trim();
+        return ip && (ipCounts[ip] || 0) > 1;
+      }).length;
+      const countEl = document.getElementById('sameIpCountBadge');
+      if (countEl) countEl.innerText = sameIpTotal;
+
+      // Filter if currentFilter is 'same_ip'
+      let displayLeads = leads;
+      if (currentFilter === 'same_ip') {
+        displayLeads = leads.filter(l => {
+          const ip = (l.ip || '').trim();
+          return ip && (ipCounts[ip] || 0) > 1;
+        });
+      }
+
+      if (!displayLeads || displayLeads.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      displayLeads.forEach((lead, index) => {
         const tr = document.createElement('tr');
         
         // Date formatting
@@ -1401,6 +1511,11 @@
         const typeIcon = isBrochure ? '📄' : '💬';
         const typeLabel = isBrochure ? 'Brochure' : 'Enquiry';
 
+        // Duplicate IP Detection
+        const ip = (lead.ip || '').trim();
+        const isDuplicateIp = ip && (ipCounts[ip] || 0) > 1;
+        const duplicateCount = ipCounts[ip] || 1;
+
         // Clean phone for WhatsApp
         const rawDigits = (lead.rawMobile || lead.phone || '').replace(/\D/g, '');
         const waNumber = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
@@ -1410,12 +1525,24 @@
         const statusClass = getStatusClass(status);
 
         tr.innerHTML = `
+          <td style="text-align: center;">
+            <span class="lead-number-badge ${isDuplicateIp ? 'duplicate-ip-number' : ''}" title="${isDuplicateIp ? `Duplicate IP: ${escapeHtml(ip)} (${duplicateCount} leads from this IP address)` : `Lead #${index + 1}`}">
+              #${index + 1}
+            </span>
+          </td>
           <td>
             <div class="lead-name">${escapeHtml(lead.name || 'Anonymous')}</div>
             <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">
               ${formattedDate} &bull; ${formattedTime}
             </div>
-            <div class="lead-id-tag">${escapeHtml(lead._id)}</div>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+              <span class="lead-id-tag ${isDuplicateIp ? 'duplicate-ip-id' : ''}">${escapeHtml(lead._id)}</span>
+              ${isDuplicateIp ? `
+                <span class="duplicate-ip-badge" title="${duplicateCount} submissions share IP: ${escapeHtml(ip)}">
+                  <span class="pulse-dot"></span> Same IP (${duplicateCount})
+                </span>
+              ` : ''}
+            </div>
           </td>
           <td>
             <div class="contact-cell">
@@ -1544,10 +1671,29 @@
       const lead = leadsData.find(l => l._id === id);
       if (!lead) return;
 
+      const ip = (lead.ip || '').trim();
+      const ipCounts = {};
+      leadsData.forEach(l => {
+        const itemIp = (l.ip || '').trim();
+        if (itemIp) ipCounts[itemIp] = (ipCounts[itemIp] || 0) + 1;
+      });
+      const isDuplicate = ip && (ipCounts[ip] || 0) > 1;
+      const dupCount = ipCounts[ip] || 1;
+
       document.getElementById('modalLeadName').innerText = `${lead.name || 'Lead'} (${lead._id})`;
       const modalBody = document.getElementById('modalBody');
 
       modalBody.innerHTML = `
+        ${isDuplicate ? `
+          <div class="duplicate-ip-alert-banner">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+              <div style="font-weight: 800; font-size: 0.92rem;">⚠️ Duplicate IP Address Alert</div>
+              <div style="font-size: 0.8rem; margin-top: 2px;">This lead shares IP address <code>${escapeHtml(ip)}</code> with <strong>${dupCount - 1} other inquiry submission(s)</strong>.</div>
+            </div>
+          </div>
+        ` : ''}
+
         <div class="detail-section">
           <h4>Customer Information</h4>
           <div class="detail-grid">
@@ -1613,7 +1759,9 @@
           <div class="detail-grid">
             <div class="detail-item">
               <span class="detail-label">Client IP Address</span>
-              <span class="detail-value">${escapeHtml(lead.ip || 'N/A')}</span>
+              <span class="detail-value" style="${isDuplicate ? 'color: #dc2626; font-weight: 800;' : ''}">
+                ${escapeHtml(lead.ip || 'N/A')} ${isDuplicate ? `<span style="font-size: 0.72rem; color: #dc2626; background: #fee2e2; padding: 2px 7px; border-radius: 4px; margin-left: 6px; font-weight: 700;">⚠️ Same IP (${dupCount})</span>` : ''}
+              </span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Created At</span>

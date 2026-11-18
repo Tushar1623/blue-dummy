@@ -6,7 +6,7 @@ A faithful, fully responsive replica of the [Godrej Blue Kolkata Landing Page](h
 
 ## 🚀 Key Features
 
-1. **Exact Visual Replica**: Complete layout matching the official Godrej Blue website with hero banner, quick ribbon, project overview, amenities, connectivity, gallery, reviews, and interactive enquiry popups.
+1. **Exact Visual Replica & Curated Visual Gallery**: Complete layout matching the official Godrej Blue website with hero banner, quick ribbon, project overview, **"Designed with Precision – Explore BLUE’s Floor Plans"** (featuring the Master Layout Plan, 3 BHK, 4 BHK, and 4 BHK + Servant pricing cards with high-res architectural plans), **"Gallery: A Glimpse into the World of BLUE"** (featuring 13 high-res architectural & interior visuals from `assets/blue image` + video walkthrough with GLightbox fullscreen zoom), **Location Advantage & Strategic Landmarks** (Hospitals, Transit Connectivity, Schools & Institutions, Malls), amenities, connectivity, reviews, and interactive enquiry popups.
 2. **Mandatory Lead Capture**:
    - **Brochure Download**: Prompts the user to fill the lead form first, saves the lead to the database, redirects to `thankyou.html`, and automatically downloads the official 38-page brochure PDF (`godrej_blue_brochure.pdf`).
    - **Enquiry / Site Visit**: Prompts the lead form, stores lead details, and confirms submission on `thankyou.html`.
@@ -16,6 +16,7 @@ A faithful, fully responsive replica of the [Godrej Blue Kolkata Landing Page](h
 4. **Executive Admin Panel (`/admin`)**:
    - Login credentials are configured through environment variables.
    - Real-time KPIs: Total Leads, Brochure Downloads, Enquiries, Today's count, MongoDB status.
+   - **Duplicate IP Detection & Red Marking**: Automatically detects repeated submissions from the same IP address, marking the Lead Number (`#`) and Lead ID in bright red with an alert badge (`Same IP`), a dedicated 1-click filter pill, and full details modal warnings.
    - Lead Search & Filtering (by Type, Date, Status, or query).
    - Direct 1-Click WhatsApp (`https://wa.me/`) & Call (`tel:`) buttons.
    - Live Pipeline Status updates (New, Contacted, In Follow-Up, Site Visit Scheduled, Booked, Not Interested).

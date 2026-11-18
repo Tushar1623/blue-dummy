@@ -367,6 +367,16 @@ app.get('/api/admin/leads', async (req, res) => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       leads = leads.filter(l => new Date(l.createdAt) >= todayStart);
+    } else if (filter === 'same_ip') {
+      const ipCounts = {};
+      leads.forEach(l => {
+        const ip = (l.ip || '').trim();
+        if (ip) ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+      });
+      leads = leads.filter(l => {
+        const ip = (l.ip || '').trim();
+        return ip && ipCounts[ip] > 1;
+      });
     }
 
     if (status && status !== 'all') {
